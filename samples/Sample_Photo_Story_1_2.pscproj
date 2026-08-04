@@ -1,0 +1,42 @@
+{
+  "format": "Photo Story Creator Project",
+  "version": "1.2",
+  "projectName": "Sample Photo Story 1.2",
+  "author": "Presenter",
+  "description": "Sample timing and presentation project",
+  "imageFolder": "Images",
+  "outputFolder": "Video",
+  "secondsPerImage": 5,
+  "transition": "fade",
+  "transitionDuration": 1,
+  "introEnabled": true,
+  "introTitle": "Summer Journey",
+  "introSubtitle": "A Photo Story",
+  "introDuration": 4,
+  "outroEnabled": true,
+  "outroTitle": "Thank You",
+  "outroSubtitle": "",
+  "outroDuration": 4,
+  "images": [
+    {
+      "id": "sample-1",
+      "name": "image_001.jpg",
+      "duration": 5,
+      "caption": "The journey begins",
+      "transition": "fade",
+      "transitionDuration": 1,
+      "motion": "zoom-in",
+      "locked": false
+    },
+    {
+      "id": "sample-2",
+      "name": "image_002.jpg",
+      "duration": 8,
+      "caption": "A longer moment",
+      "transition": "dissolve",
+      "transitionDuration": 1.5,
+      "motion": "none",
+      "locked": false
+    }
+  ]
+}

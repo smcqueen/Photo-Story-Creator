@@ -1,0 +1,3 @@
+Photo Story Creator
+Version 1.2
+Timing and Presentation Controls

@@ -1,0 +1,16 @@
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor files
+*~
+*.swp
+*.bak
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Build artifacts
+dist/
+build/
