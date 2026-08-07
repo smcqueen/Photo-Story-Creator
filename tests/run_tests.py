@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Photo Story Creator 1.4.6 release tests (standard library only)."""
+"""Photo Story Creator 1.5.2 release tests (standard library only)."""
 from __future__ import annotations
 import shutil
 import subprocess
@@ -17,7 +17,21 @@ def require(condition: bool, message: str) -> None:
 
 def static_tests() -> None:
     text = INDEX.read_text(encoding="utf-8")
-    require("Photo Story Creator 1.4.6" in text, "application version was not updated")
+    require("Photo Story Creator 1.5.2" in text, "application version was not updated")
+    require('id="fullscreenStory"' in text and "id:'openFullscreen'" in text, "full-screen storyboard missing")
+    require("applyFullFilter" in text and 'id="fsSearch"' in text and 'id="fsFilter"' in text, "full-screen search/filter missing")
+    require("moveSelectionTo" in text and 'id="fsMoveBefore"' in text and 'id="fsMoveAfter"' in text, "long-distance move controls missing")
+    require('id="fsCut"' in text and 'id="fsPaste"' in text, "cut/paste arranging missing")
+    require("managerHome.after(managerGrid)" in text, "shared storyboard restoration missing")
+    require("e.key==='Escape'" in text, "Escape exit missing")
+    require("function jumpToRequested()" in text, "dependable jump handler missing")
+    require("stage.scrollTo" in text and "jump-target" in text, "jump scrolling/highlight missing")
+    require("card?.classList.contains('filtered-out')" in text, "filtered jump target recovery missing")
+    require("Number.isInteger(number)" in text and "fsNumber').onkeydown" in text, "jump validation/Enter activation missing")
+    require('id="inspectTitle"' in text and 'id="inspectCaptionPosition"' in text, "slide caption editor missing")
+    require("captionFont" in text and "captionSize" in text and "captionShadow" in text, "caption typography controls missing")
+    require("captionOverlay" in text and "caption-preview" in text, "caption preview missing")
+    require("withCaptionText" in text and "captionText(x)" in text, "title/caption renderer integration missing")
     require('id="photoInput"' in text and 'multiple hidden' in text, "individual multi-photo import missing")
     require('id="storyDrop"' in text and "dataTransfer.files" in text, "drag-and-drop import missing")
     require('id="folderInput" type="file" webkitdirectory multiple hidden' in text, "compatible directory picker missing")
@@ -68,7 +82,7 @@ def ffmpeg_regression_test() -> None:
     frame = 1.0 / fps
     durations = [5.0] * 6
     transitions = [("fade", frame), ("slideright", 2.0), ("fade", 2.0), ("fade", 2.0), ("fade", 2.0)]
-    with tempfile.TemporaryDirectory(prefix="psc14-test-") as temp:
+    with tempfile.TemporaryDirectory(prefix="psc15-test-") as temp:
         work = Path(temp)
         clips = []
         for index in range(6):
@@ -99,11 +113,34 @@ def ffmpeg_regression_test() -> None:
         print(f"PASS: FFmpeg mixed-transition duration {actual:.6f}s")
 
 
+def caption_render_test() -> None:
+    if not shutil.which("ffmpeg"):
+        print("SKIP: caption render test (ffmpeg not installed)")
+        return
+    with tempfile.TemporaryDirectory(prefix="psc15-caption-") as temp:
+        work = Path(temp)
+        caption = work / "caption.txt"
+        caption.write_text("Summer Journey\nThe journey begins", encoding="utf-8")
+        output = work / "caption.mp4"
+        escaped = str(caption).replace("'", "\\'")
+        subprocess.run([
+            "ffmpeg", "-loglevel", "error", "-y", "-f", "lavfi", "-i",
+            "color=c=navy:s=640x360:r=24:d=1", "-vf",
+            f"drawtext=textfile='{escaped}':font=sans-serif:fontcolor=white:fontsize=32:"
+            "box=1:boxcolor=black@0.55:boxborderw=12:shadowx=2:shadowy=2:"
+            "x=(w-text_w)/2:y=h-text_h-40,format=yuv420p",
+            "-t", "1", "-c:v", "libx264", str(output),
+        ], check=True)
+        require(output.is_file() and output.stat().st_size > 0, "captioned video was not created")
+        print("PASS: FFmpeg UTF-8 title/caption render")
+
+
 def main() -> None:
     static_tests()
     print("PASS: static release checks")
     ffmpeg_regression_test()
-    print("All Photo Story Creator 1.4.6 tests passed.")
+    caption_render_test()
+    print("All Photo Story Creator 1.5.2 tests passed.")
 
 
 if __name__ == "__main__":
