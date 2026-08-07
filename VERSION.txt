@@ -1,3 +1,3 @@
 Photo Story Creator
-Version 1.3
-Cut Transition Reliability Fix
+Version 1.4.6
+Audio Path and Renderer Chooser Fix

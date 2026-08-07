@@ -1,1 +1,14 @@
-<!doctype html><meta charset="utf-8"><title>Changelog</title><h1>Photo Story Creator 1.3</h1><h2>Version 1.3</h2><ul><li>Fixed mixed Cut and animated transitions producing a video only as long as the first image.</li><li>Changed simulated Cut transitions from a sub-frame 0.04-second fade to exactly one frame at the selected output frame rate.</li><li>Applied the correction to both Linux/macOS shell and Windows PowerShell renderers.</li><li>Added embedded checks for frame-safe Cut generation.</li><li>Added an FFmpeg regression test using Cut, Slideright, and Fade transitions.</li></ul><h2>Version 1.2</h2><ul><li>Added functional individual image durations and bulk timing presets.</li><li>Added intro and closing title cards.</li><li>Added rendered captions and per-image transitions.</li><li>Added target-runtime fitting, thumbnail indicators, undo, redo, audio, motion, scaling, and FFmpeg rendering.</li></ul>
+<!doctype html><meta charset="utf-8"><title>Changelog</title>
+<h1>Photo Story Creator 1.4.6</h1>
+<h2>Version 1.4.6</h2>
+<ul><li>Saved projects now contain compact thumbnail previews, so reopening a project restores the visual storyboard immediately.</li><li>Added a Relink Images action for older projects and source folders that have been moved.</li><li>Relinking preserves storyboard order, timing, transitions, captions, and HEIC conversion associations.</li></ul>
+<h2>Version 1.4.5</h2>
+<ul><li>Explains the browser restriction that hides the selected audio file's absolute folder.</li><li>Linux and Windows renderers now open an audio-file chooser when the saved basename cannot be found.</li><li>Both renderers validate the selected audio path before starting FFmpeg.</li></ul>
+<h2>Version 1.4.4</h2>
+<ul><li>Pairs HEIC/HEIF originals and converted JPEG working copies before adding either item to the storyboard.</li><li>Importing a parent folder that contains <code>PSC_Converted</code> now creates one storyboard item per HEIC photo, not a converted image plus a placeholder.</li><li>Re-importing <code>PSC_Converted</code> replaces pending placeholders when needed and otherwise skips photos already present.</li><li>Preserves storyboard position and timing when a converted JPEG replaces a placeholder.</li><li>Includes the v1.4.3 folder import, storyboard-order rendering, converted-image resolution, and stale-clip fixes.</li></ul>
+<h2>Version 1.4.1</h2>
+<ul><li>Added HEIC and HEIF recognition, conversion tools, placeholders, and matching JPEG replacement.</li></ul>
+<h2>Version 1.4</h2>
+<ul><li>Added individual and drag-and-drop photo import.</li><li>Improved multi-selection, group reordering, batch timing, timing locks, and audio workflow.</li><li>Preserved the frame-safe Cut and mixed-transition rendering fixes from v1.3.</li></ul>
+<h2>Version 1.3</h2>
+<ul><li>Fixed mixed Cut and animated transitions producing a video only as long as the first image.</li><li>Changed simulated Cut transitions to exactly one frame at the selected frame rate.</li></ul>
