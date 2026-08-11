@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Photo Story Creator 1.5.2 release tests (standard library only)."""
+"""Photo Story Creator 1.6 release tests (standard library only)."""
 from __future__ import annotations
 import shutil
 import subprocess
@@ -17,7 +17,14 @@ def require(condition: bool, message: str) -> None:
 
 def static_tests() -> None:
     text = INDEX.read_text(encoding="utf-8")
-    require("Photo Story Creator 1.5.2" in text, "application version was not updated")
+    require("Photo Story Creator 1.6" in text, "application version was not updated")
+    require("Version 1.6 workflow" in text and "Version 1.5 workflow" not in text, "dashboard workflow label was not updated")
+    require("version:'1.6'" in text, "new projects do not use the 1.6 project format version")
+    require('id="previewPage"' in text and 'id="previewStage"' in text, "preview workspace missing")
+    require(all(f'id="{control}"' in text for control in ("previewPlay", "previewRestart", "previewPrevious", "previewNext", "previewFromSelected", "previewFullscreen")), "preview controls missing")
+    require("function previewTimeline" in text and "function seekPreview" in text, "preview timing/navigation missing")
+    require("requestFullscreen" in text and "previewDraft" in text, "full-screen/draft preview missing")
+    require("previewAudioFile" in text and "syncPreviewAudio" in text, "preview soundtrack support missing")
     require('id="fullscreenStory"' in text and "id:'openFullscreen'" in text, "full-screen storyboard missing")
     require("applyFullFilter" in text and 'id="fsSearch"' in text and 'id="fsFilter"' in text, "full-screen search/filter missing")
     require("moveSelectionTo" in text and 'id="fsMoveBefore"' in text and 'id="fsMoveAfter"' in text, "long-distance move controls missing")
@@ -82,7 +89,7 @@ def ffmpeg_regression_test() -> None:
     frame = 1.0 / fps
     durations = [5.0] * 6
     transitions = [("fade", frame), ("slideright", 2.0), ("fade", 2.0), ("fade", 2.0), ("fade", 2.0)]
-    with tempfile.TemporaryDirectory(prefix="psc15-test-") as temp:
+    with tempfile.TemporaryDirectory(prefix="psc16-test-") as temp:
         work = Path(temp)
         clips = []
         for index in range(6):
@@ -117,7 +124,7 @@ def caption_render_test() -> None:
     if not shutil.which("ffmpeg"):
         print("SKIP: caption render test (ffmpeg not installed)")
         return
-    with tempfile.TemporaryDirectory(prefix="psc15-caption-") as temp:
+    with tempfile.TemporaryDirectory(prefix="psc16-caption-") as temp:
         work = Path(temp)
         caption = work / "caption.txt"
         caption.write_text("Summer Journey\nThe journey begins", encoding="utf-8")
@@ -140,7 +147,7 @@ def main() -> None:
     print("PASS: static release checks")
     ffmpeg_regression_test()
     caption_render_test()
-    print("All Photo Story Creator 1.5.2 tests passed.")
+    print("All Photo Story Creator 1.6 tests passed.")
 
 
 if __name__ == "__main__":
