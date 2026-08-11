@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Photo Story Creator 1.7.2 release tests (standard library only)."""
+"""Photo Story Creator 1.8 release tests (standard library only)."""
 from __future__ import annotations
 import shutil
 import subprocess
@@ -18,9 +18,15 @@ def require(condition: bool, message: str) -> None:
 
 def static_tests() -> None:
     text = INDEX.read_text(encoding="utf-8")
-    require("Photo Story Creator 1.7.2" in text, "application version was not updated")
-    require("Version 1.7.2 workflow" in text, "dashboard workflow label was not updated")
-    require("state.version='1.7.2'" in text, "new projects do not use the 1.7.2 project format version")
+    require("Photo Story Creator 1.8" in text, "application version was not updated")
+    require("Version 1.8 workflow" in text, "dashboard workflow label was not updated")
+    require("state.version='1.8'" in text, "new projects do not use the 1.8 project format version")
+    require('id="transformCanvas"' in text and "function drawTransformPreview" in text, "live transform canvas preview missing")
+    require(all(f'id="{control}"' in text for control in ("transformPrevious", "transformNext", "transformBefore", "transformZoom")), "transform comparison/navigation controls missing")
+    require('id="applyTransformCurrent"' in text and 'id="applyTransformSelected"' in text, "explicit current/selected transform actions missing")
+    require("function exportTransformed(type)" in text and 'id="exportJpeg"' in text and 'id="exportPng"' in text, "JPEG/PNG transformed-copy export missing")
+    require("canvas.toBlob" in text and "_transformed.${type}" in text, "transformed copy encoding or naming missing")
+    require("never overwrites the source photograph" in text, "non-destructive export guidance missing")
     require("function withExpandedRenderTiming" in text, "additive renderer timing expansion missing")
     require("incoming=(i>0||state.introEnabled)" in text, "incoming transition timing missing")
     require("preview timeline adds transitions" in text, "preview additive-timing regression missing")
@@ -37,6 +43,9 @@ def static_tests() -> None:
     require("state.images.indexOf(x)+i" not in text, "storyboard offset still corrupts selected automatic-motion cycle")
     require("automatic motion cycles within an offset selection" in text, "offset-selection motion regression missing")
     require(all(x in text for x in ("cropLeft", "straighten", "rotation", "flipH", "flipV")), "non-destructive transforms missing")
+    require("setTransformRotation((Number($('#rotationValue').dataset.rotation)||0)+90)" in text, "cumulative rotate-right command missing")
+    require("setTransformRotation((Number($('#rotationValue').dataset.rotation)||0)-90)" in text, "cumulative rotate-left command missing")
+    require("setTransformToggle(id,$('#'+id).getAttribute('aria-pressed')!=='true')" in text, "reversible flip commands missing")
     require("function transformFilter" in text and "function resolvedMotion" in text, "transform/motion renderer integration missing")
     require("workloadEstimate" in text and "billion output pixels" in text, "render workload estimate missing")
     require("hashlib.sha256" in text and "Reusing clip" in text, "resumable Linux clip cache missing")
@@ -96,6 +105,19 @@ def static_tests() -> None:
     windows_converter = (ROOT / "tools" / "convert_heic_windows.ps1").read_text(encoding="utf-8")
     require("PSC_Converted" in linux_converter and "heif-convert" in linux_converter, "Linux converter incomplete")
     require("PSC_Converted" in windows_converter and "magick" in windows_converter, "Windows converter incomplete")
+
+
+def javascript_syntax_test() -> None:
+    if not shutil.which("node"):
+        print("SKIP: JavaScript syntax test (Node.js not installed)")
+        return
+    text = INDEX.read_text(encoding="utf-8")
+    script = text.split("<script>", 1)[1].rsplit("</script>", 1)[0]
+    with tempfile.TemporaryDirectory(prefix="psc18-js-") as temp:
+        source = Path(temp) / "application.js"
+        source.write_text(script, encoding="utf-8")
+        subprocess.run(["node", "--check", str(source)], check=True)
+    print("PASS: JavaScript syntax")
 
 
 def duration(path: Path) -> float:
@@ -219,11 +241,12 @@ def motion_performance_test() -> None:
 def main() -> None:
     static_tests()
     print("PASS: static release checks")
+    javascript_syntax_test()
     ffmpeg_regression_test()
     caption_render_test()
     audio_crossfade_test()
     motion_performance_test()
-    print("All Photo Story Creator 1.7.2 tests passed.")
+    print("All Photo Story Creator 1.8 tests passed.")
 
 
 if __name__ == "__main__":
