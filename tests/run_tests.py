@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
-"""Photo Story Creator 1.6 release tests (standard library only)."""
+"""Photo Story Creator 1.7.1 release tests (standard library only)."""
 from __future__ import annotations
 import shutil
 import subprocess
 import tempfile
+import time
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -17,9 +18,17 @@ def require(condition: bool, message: str) -> None:
 
 def static_tests() -> None:
     text = INDEX.read_text(encoding="utf-8")
-    require("Photo Story Creator 1.6" in text, "application version was not updated")
-    require("Version 1.6 workflow" in text and "Version 1.5 workflow" not in text, "dashboard workflow label was not updated")
-    require("version:'1.6'" in text, "new projects do not use the 1.6 project format version")
+    require("Photo Story Creator 1.7.1" in text, "application version was not updated")
+    require("Version 1.7.1 workflow" in text, "dashboard workflow label was not updated")
+    require("state.version='1.7.1'" in text, "new projects do not use the 1.7.1 project format version")
+    require(all(x in text for x in ("pan-left", "pan-right", "automatic", "motionCycle")), "motion presets or automatic assignment missing")
+    require(all(x in text for x in ("cropLeft", "straighten", "rotation", "flipH", "flipV")), "non-destructive transforms missing")
+    require("function transformFilter" in text and "function resolvedMotion" in text, "transform/motion renderer integration missing")
+    require("workloadEstimate" in text and "billion output pixels" in text, "render workload estimate missing")
+    require("hashlib.sha256" in text and "Reusing clip" in text, "resumable Linux clip cache missing")
+    require("function zoomWorkingCanvas" in text and "const ww=w*2,hh=h*2" in text, "smooth zoom working canvas missing")
+    require("motion==='zoom-in'||motion==='zoom-out'" in text, "zoom-only overscaling rule missing")
+    require("motion-label" in text and "Zoom in" in text, "preview motion indicator missing")
     require('id="previewPage"' in text and 'id="previewStage"' in text, "preview workspace missing")
     require(all(f'id="{control}"' in text for control in ("previewPlay", "previewRestart", "previewPrevious", "previewNext", "previewFromSelected", "previewFullscreen")), "preview controls missing")
     require("function previewTimeline" in text and "function seekPreview" in text, "preview timing/navigation missing")
@@ -45,6 +54,8 @@ def static_tests() -> None:
     require('id="relinkInput" type="file" webkitdirectory multiple hidden' in text, "relink directory picker missing")
     require("function makeThumbnail(file)" in text and "x.url||x.thumbnail" in text, "saved thumbnail fallback missing")
     require("async function relinkImages(files)" in text, "image relinking workflow missing")
+    require("if(linked&&selectedRoot)state.imageFolder=selectedRoot" in text, "relink does not update FFmpeg image folder")
+    require("picked.slice(selectedRoot.length+1)" in text, "relink does not preserve folder-relative paths")
     require("showDirectoryPicker" not in text, "incompatible Linux directory picker remains")
     require("application/x-photo-story-reorder" in text and "e.stopPropagation()" in text, "internal reorder isolation missing")
     require("if(dragIds.length||" in text, "outer import drop guard missing")
@@ -142,12 +153,33 @@ def caption_render_test() -> None:
         print("PASS: FFmpeg UTF-8 title/caption render")
 
 
+def motion_performance_test() -> None:
+    """2x working-canvas gate: smoother zoom without returning to full-resolution inputs."""
+    if not shutil.which("ffmpeg"):
+        print("SKIP: motion performance test (ffmpeg not installed)")
+        return
+    with tempfile.TemporaryDirectory(prefix="psc17-motion-") as temp:
+        output = Path(temp) / "motion.mp4"
+        started = time.monotonic()
+        subprocess.run([
+            "ffmpeg", "-loglevel", "error", "-y", "-f", "lavfi", "-i",
+            "testsrc2=s=1280x720:r=24:d=10", "-vf",
+            "zoompan=z='min(zoom+0.00020833,1.05)':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':d=240:s=640x360:fps=24,format=yuv420p",
+            "-frames:v", "240", "-c:v", "libx264", "-preset", "veryfast", "-crf", "23", str(output),
+        ], check=True)
+        elapsed = time.monotonic() - started
+        require(output.is_file() and output.stat().st_size > 0, "motion benchmark produced no video")
+        require(elapsed < 60, f"output-scale motion benchmark unexpectedly slow: {elapsed:.1f}s")
+        print(f"PASS: smooth-zoom benchmark {elapsed:.2f}s for 240 frames")
+
+
 def main() -> None:
     static_tests()
     print("PASS: static release checks")
     ffmpeg_regression_test()
     caption_render_test()
-    print("All Photo Story Creator 1.6 tests passed.")
+    motion_performance_test()
+    print("All Photo Story Creator 1.7.1 tests passed.")
 
 
 if __name__ == "__main__":

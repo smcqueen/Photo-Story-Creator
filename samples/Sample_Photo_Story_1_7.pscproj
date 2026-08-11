@@ -1,0 +1,13 @@
+{
+  "format": "Photo Story Creator Project",
+  "version": "1.7",
+  "projectName": "Motion and Transforms Sample",
+  "motion": "automatic",
+  "motionStrength": 5,
+  "clipCache": "resume",
+  "images": [
+    {"id":"motion-1","name":"landscape_01.jpg","duration":5,"transition":"fade","transitionDuration":1,"motion":"zoom-in","caption":"Slow zoom in","transform":{}},
+    {"id":"motion-2","name":"landscape_02.jpg","duration":5,"transition":"fade","transitionDuration":1,"motion":"pan-right","caption":"Pan right with a slight straighten","transform":{"straighten":0.5}},
+    {"id":"motion-3","name":"portrait_01.jpg","duration":5,"transition":"fade","transitionDuration":1,"motion":"zoom-out","caption":"Cropped and rotated non-destructively","transform":{"cropLeft":5,"cropRight":5,"cropTop":2,"cropBottom":2,"rotation":90}}
+  ]
+}
