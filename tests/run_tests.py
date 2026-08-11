@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Photo Story Creator 1.7.1 release tests (standard library only)."""
+"""Photo Story Creator 1.7.2 release tests (standard library only)."""
 from __future__ import annotations
 import shutil
 import subprocess
@@ -18,10 +18,24 @@ def require(condition: bool, message: str) -> None:
 
 def static_tests() -> None:
     text = INDEX.read_text(encoding="utf-8")
-    require("Photo Story Creator 1.7.1" in text, "application version was not updated")
-    require("Version 1.7.1 workflow" in text, "dashboard workflow label was not updated")
-    require("state.version='1.7.1'" in text, "new projects do not use the 1.7.1 project format version")
+    require("Photo Story Creator 1.7.2" in text, "application version was not updated")
+    require("Version 1.7.2 workflow" in text, "dashboard workflow label was not updated")
+    require("state.version='1.7.2'" in text, "new projects do not use the 1.7.2 project format version")
+    require("function withExpandedRenderTiming" in text, "additive renderer timing expansion missing")
+    require("incoming=(i>0||state.introEnabled)" in text, "incoming transition timing missing")
+    require("preview timeline adds transitions" in text, "preview additive-timing regression missing")
+    require("runtime adds animated transitions" in text and "runtime adds no time for Cut" in text, "runtime timing regressions missing")
+    require("notify-send" in text and "[Console]::Beep" in text, "interactive soundtrack alerts missing")
+    require('data-bind="audioLoopCrossfade"' in text and "audioLoopCrossfade:2" in text, "audio loop crossfade setting missing")
+    require("acrossfade=d=$ACTUAL_CROSSFADE" in text and "acrossfade=d='+$ActualCrossfade" in text, "cross-platform soundtrack crossfade rendering missing")
+    require("readableTransition" in text and "readableMotion" in text, "readable storyboard labels missing")
+    require('id="motionStatus"' in text and "Automatic motion applied to" in text, "motion assignment feedback missing")
+    require('<button class="btn primary" id="autoAll">' not in text, "whole-story motion action still looks permanently selected")
     require(all(x in text for x in ("pan-left", "pan-right", "automatic", "motionCycle")), "motion presets or automatic assignment missing")
+    require("function automaticMotionAt(selectionIndex)" in text, "selection-relative automatic-motion helper missing")
+    require("x.motion=automaticMotionAt(i)" in text, "automatic motion does not cycle within the selected items")
+    require("state.images.indexOf(x)+i" not in text, "storyboard offset still corrupts selected automatic-motion cycle")
+    require("automatic motion cycles within an offset selection" in text, "offset-selection motion regression missing")
     require(all(x in text for x in ("cropLeft", "straighten", "rotation", "flipH", "flipV")), "non-destructive transforms missing")
     require("function transformFilter" in text and "function resolvedMotion" in text, "transform/motion renderer integration missing")
     require("workloadEstimate" in text and "billion output pixels" in text, "render workload estimate missing")
@@ -98,8 +112,14 @@ def ffmpeg_regression_test() -> None:
         return
     fps = 24
     frame = 1.0 / fps
-    durations = [5.0] * 6
+    holds = [5.0] * 6
     transitions = [("fade", frame), ("slideright", 2.0), ("fade", 2.0), ("fade", 2.0), ("fade", 2.0)]
+    visible = [0.0, 2.0, 2.0, 2.0, 2.0]
+    durations = []
+    for index, hold in enumerate(holds):
+        incoming = visible[index - 1] if index else 0.0
+        outgoing = transitions[index][1] if index < len(transitions) else 0.0
+        durations.append(hold + incoming + outgoing)
     with tempfile.TemporaryDirectory(prefix="psc16-test-") as temp:
         work = Path(temp)
         clips = []
@@ -107,7 +127,7 @@ def ffmpeg_regression_test() -> None:
             clip = work / f"{index}.mp4"
             subprocess.run([
                 "ffmpeg", "-loglevel", "error", "-y", "-f", "lavfi", "-i",
-                f"color=c=black:s=320x180:r={fps}:d=5", "-c:v", "libx264", "-pix_fmt", "yuv420p", str(clip)
+                f"color=c=black:s=320x180:r={fps}:d={durations[index]}", "-c:v", "libx264", "-pix_fmt", "yuv420p", str(clip)
             ], check=True)
             clips.append(clip)
         parts = []
@@ -127,8 +147,10 @@ def ffmpeg_regression_test() -> None:
         subprocess.run(command, check=True)
         actual = duration(output)
         require(abs(actual - elapsed) <= frame * 1.5, f"mixed transition duration {actual:.6f}s; expected {elapsed:.6f}s")
-        require(actual > 20.0, "regression: output collapsed to first-clip duration")
-        print(f"PASS: FFmpeg mixed-transition duration {actual:.6f}s")
+        expected = sum(holds) + sum(visible)
+        require(abs(actual - expected) <= frame * 1.5, f"full-hold duration {actual:.6f}s; expected {expected:.6f}s")
+        require(actual > 30.0, "regression: transition time was not added to full image holds")
+        print(f"PASS: FFmpeg full-hold mixed-transition duration {actual:.6f}s")
 
 
 def caption_render_test() -> None:
@@ -151,6 +173,27 @@ def caption_render_test() -> None:
         ], check=True)
         require(output.is_file() and output.stat().st_size > 0, "captioned video was not created")
         print("PASS: FFmpeg UTF-8 title/caption render")
+
+
+def audio_crossfade_test() -> None:
+    if not shutil.which("ffmpeg") or not shutil.which("ffprobe"):
+        print("SKIP: audio crossfade test (ffmpeg/ffprobe not installed)")
+        return
+    with tempfile.TemporaryDirectory(prefix="psc172-audio-") as temp:
+        output = Path(temp) / "looped.m4a"
+        command = ["ffmpeg", "-loglevel", "error", "-y"]
+        for frequency in (330, 440, 550):
+            command += ["-f", "lavfi", "-i", f"sine=frequency={frequency}:duration=2"]
+        command += [
+            "-filter_complex",
+            "[0:a][1:a]acrossfade=d=0.5:c1=tri:c2=tri[a2];"
+            "[a2][2:a]acrossfade=d=0.5:c1=tri:c2=tri,atrim=duration=5,asetpts=PTS-STARTPTS[aout]",
+            "-map", "[aout]", "-c:a", "aac", str(output),
+        ]
+        subprocess.run(command, check=True)
+        actual = duration(output)
+        require(abs(actual - 5.0) <= 0.08, f"audio crossfade duration {actual:.3f}s; expected 5.0s")
+        print(f"PASS: seamless soundtrack-loop crossfade duration {actual:.3f}s")
 
 
 def motion_performance_test() -> None:
@@ -178,8 +221,9 @@ def main() -> None:
     print("PASS: static release checks")
     ffmpeg_regression_test()
     caption_render_test()
+    audio_crossfade_test()
     motion_performance_test()
-    print("All Photo Story Creator 1.7.1 tests passed.")
+    print("All Photo Story Creator 1.7.2 tests passed.")
 
 
 if __name__ == "__main__":

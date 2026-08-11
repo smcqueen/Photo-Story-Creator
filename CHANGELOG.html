@@ -1,5 +1,7 @@
 <!doctype html><meta charset="utf-8"><title>Changelog</title>
-<h1>Photo Story Creator 1.7.1</h1>
+<h1>Photo Story Creator 1.7.2</h1>
+<h2>Version 1.7.2</h2>
+<ul><li>Changed timing so every image retains its full requested display hold.</li><li>Animated transitions now add their configured time between image holds; Cut adds no visible time.</li><li>Updated runtime estimates, target-runtime fitting, browser preview, Linux and Windows renderers, and regression tests to use the same timing model.</li><li>Added audible and visible attention alerts before a long render pauses to request a missing soundtrack location.</li><li>Corrected Automatic Subtle Motion for a partial selection so it cycles through Zoom In, Pan Right, Zoom Out, and Pan Left regardless of where the selection begins in the storyboard.</li><li>Added configurable seamless soundtrack-loop crossfading on Linux and Windows, with a two-second default and automatic shortening for brief audio files.</li><li>Replaced internal storyboard state codes with readable transition and motion labels.</li><li>Changed automatic-motion controls to neutral action buttons and added explicit confirmation after selected-image or whole-story assignment.</li></ul>
 <h2>Version 1.7.1</h2>
 <ul><li>Fixed Relink Images so the selected folder becomes the FFmpeg image folder and nested relative paths remain valid.</li><li>Smoothed subtle zoom rendering with a 2× output-size working canvas while keeping pans and static slides on the faster final-resolution path.</li><li>Added a visible motion-and-strength indicator to the browser preview.</li><li>Added regression tests for relinking metadata, zoom canvas size, frame progression, and the zoom performance gate.</li></ul>
 <h2>Version 1.7</h2>
