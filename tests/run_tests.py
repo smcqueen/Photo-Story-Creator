@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Photo Story Creator 1.8 release tests (standard library only)."""
+"""Photo Story Creator 1.9.1 release tests (standard library only)."""
 from __future__ import annotations
 import shutil
 import subprocess
@@ -18,9 +18,28 @@ def require(condition: bool, message: str) -> None:
 
 def static_tests() -> None:
     text = INDEX.read_text(encoding="utf-8")
-    require("Photo Story Creator 1.8" in text, "application version was not updated")
-    require("Version 1.8 workflow" in text, "dashboard workflow label was not updated")
-    require("state.version='1.8'" in text, "new projects do not use the 1.8 project format version")
+    require("Photo Story Creator 1.9.1" in text, "application version was not updated")
+    require("Version 1.9.1 workflow" in text, "dashboard workflow label was not updated")
+    require("defaults.version='1.9.1'" in text and "state.version='1.9.1'" in text, "new projects do not use the 1.9.1 project format version")
+    require("HISTORY_LIMIT=100" in text and "if(undo.length>HISTORY_LIMIT)undo.shift()" in text, "bounded 100-action Undo history missing")
+    require("if(redo.length>HISTORY_LIMIT)redo.shift()" in text, "bounded Redo history missing")
+    require("savedSnapshot" in text and "snapshot()!==savedSnapshot" in text, "saved-state comparison missing")
+    require(all(label in text for label in ("Never saved", "Unsaved changes", "Recovery copy saved", "Saved")), "save-state indicators incomplete")
+    require("PhotoStoryCreatorRecovery" in text and "indexedDB.open(RECOVERY_DB,1)" in text, "IndexedDB recovery storage missing")
+    require("savedAt:new Date().toISOString()" in text and "schema:2" in text, "timestamped recovery record missing")
+    require("setTimeout(writeRecoveryNow,500)" in text, "debounced recovery save missing")
+    require(all(f'id="{control}"' in text for control in ("recoveryDialog", "recoverProject", "discardRecovery", "openInstead")), "recovery choices missing")
+    require("function recoverWork()" in text and "function readRecovery()" in text, "recovery workflow missing")
+    require("markNeverSaved(!!pendingRecovery)" in text, "startup clears recovery before the user chooses an action")
+    require("store.delete(RECOVERY_ID)" in text, "obsolete recovery cleanup missing")
+    require("Recovery failed" in text and "Use Save Project now" in text, "visible recovery-failure warning missing")
+    require("localStorage.setItem(LEGACY_RECOVERY_KEY" not in text, "new recovery data still uses size-limited localStorage")
+    require("recoveryGeneration" in text, "recovery write/delete race protection missing")
+    require("beforeunload" in text and "discard the current unsaved changes" in text, "unsaved-change warnings missing")
+    require("event.shiftKey?doRedo():doUndo()" in text and "key==='y'" in text, "Undo/Redo keyboard shortcuts missing")
+    require("tag==='INPUT'||tag==='TEXTAREA'||tag==='SELECT'" in text, "keyboard shortcuts interfere with text editing")
+    require("It does not replace Save Project" in text, "recovery-versus-project-file guidance missing")
+    require("Photo Story Creator 1.9.1 Linux" in text and "Photo Story Creator 1.9.1 Windows" in text, "generated renderer labels were not updated")
     require('id="transformCanvas"' in text and "function drawTransformPreview" in text, "live transform canvas preview missing")
     require(all(f'id="{control}"' in text for control in ("transformPrevious", "transformNext", "transformBefore", "transformZoom")), "transform comparison/navigation controls missing")
     require('id="applyTransformCurrent"' in text and 'id="applyTransformSelected"' in text, "explicit current/selected transform actions missing")
@@ -113,7 +132,7 @@ def javascript_syntax_test() -> None:
         return
     text = INDEX.read_text(encoding="utf-8")
     script = text.split("<script>", 1)[1].rsplit("</script>", 1)[0]
-    with tempfile.TemporaryDirectory(prefix="psc18-js-") as temp:
+    with tempfile.TemporaryDirectory(prefix="psc191-js-") as temp:
         source = Path(temp) / "application.js"
         source.write_text(script, encoding="utf-8")
         subprocess.run(["node", "--check", str(source)], check=True)
@@ -246,7 +265,7 @@ def main() -> None:
     caption_render_test()
     audio_crossfade_test()
     motion_performance_test()
-    print("All Photo Story Creator 1.8 tests passed.")
+    print("All Photo Story Creator 1.9.1 tests passed.")
 
 
 if __name__ == "__main__":
