@@ -1,0 +1,41 @@
+{
+  "name": "photo-story-creator",
+  "version": "2.0.0-dev.1",
+  "private": true,
+  "description": "Offline slideshow and timelapse authoring for Linux and Windows",
+  "main": "desktop/main/main.js",
+  "scripts": {
+    "start": "electron .",
+    "test": "node --test tests/desktop/*.test.js && python3 tests/run_tests.py",
+    "test:desktop": "node --test tests/desktop/*.test.js",
+    "test:browser": "python3 tests/run_tests.py",
+    "dist:linux": "electron-builder --linux AppImage deb",
+    "pack:linux": "electron-builder --linux dir"
+  },
+  "engines": {
+    "node": ">=24.0.0",
+    "npm": ">=11.0.0"
+  },
+  "devDependencies": {
+    "electron": "43.4.0",
+    "electron-builder": "26.15.3"
+  },
+  "build": {
+    "appId": "org.photostorycreator.desktop",
+    "productName": "Photo Story Creator",
+    "asar": true,
+    "files": [
+      "index.html",
+      "desktop/**/*",
+      "shared/**/*",
+      "tools/**/*",
+      "VERSION.txt",
+      "README.html",
+      "CHANGELOG.html"
+    ],
+    "linux": {
+      "target": ["AppImage", "deb"],
+      "category": "AudioVideo"
+    }
+  }
+}

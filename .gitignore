@@ -14,3 +14,7 @@ __pycache__/
 # Build artifacts
 dist/
 build/
+node_modules/
+
+# Electron local state
+.electron/
